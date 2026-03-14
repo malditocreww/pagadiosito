@@ -1108,29 +1108,44 @@
       }
     }
 
-    async function procesarArchivo(input){
-      if(!input.files[0]) return;
+   // Reemplazá tu antigua función de procesarArchivo por esta:
+async function procesarArchivo(input) {
+  if (!input.files[0]) return;
+  const file = input.files[0];
+
+  // Mostrar loader
+  document.getElementById('iaLoader').classList.add('show');
+  
+  // Convertir a Base64
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = async () => {
+    const base64Data = reader.result.split(',')[1];
+
+    try {
+      const response = await fetch('/api/analizar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageB64: base64Data })
+      });
+
+      const datosIA = await response.json();
       
-      const file = input.files[0];
-      console.log('Archivo:', file.name, 'Tipo:', file.type);
+      // Llenar los inputs automáticamente
+      document.getElementById('f-empresa').value = datosIA.empresa || '';
+      document.getElementById('f-titular').value = datosIA.titular || '';
+      document.getElementById('f-monto').value = datosIA.monto || '';
+      document.getElementById('f-vence').value = datosIA.vence || '';
+      document.getElementById('f-cat').value = datosIA.categoria || '📄';
       
-      const esImagen = file.type.startsWith('image/');
-      const esPDF = file.type === 'application/pdf';
-      
-      if(!esImagen && !esPDF){
-        flash('❌ Solo imágenes (JPG, PNG) o PDFs');
-        return;
-      }
-      
-      // Mostrar preview
-      if(esImagen){
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          document.getElementById('previewImg').src = e.target.result;
-          document.getElementById('imagePreview').style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-      }
+      flash("✅ IA DE GEMINI FINALIZADA");
+    } catch (err) {
+      flash("❌ ERROR EN EL SERVIDOR");
+    } finally {
+      document.getElementById('iaLoader').classList.remove('show');
+    }
+  };
+}
       
       // Mostrar loader
       document.getElementById('iaLoader').classList.add('show');
