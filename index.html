@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PAGA DIOS - Gestor de Facturas</title>
+  
+  <!-- Librerías externas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="https://unpkg.com/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap');
+    
+    *{box-sizing:border-box;margin:0;padding:0;}
+    
+    .app[data-theme="dark"]{
+      --fondo:#0a0a0a;
+      --sup:#141414;
+      --sup2:#1e1e1e;
+      --borde:rgba(255,255,255,0.08);
+      --txt:#f0f0f0;
+      --txt2:#888;
+      --verde:#1DB954;
+      --vd:#158a3e;
+      --rojo:#E24B4A;
+      --amarillo:#EF9F27;
+      --card-bg:#141414;
+      --header-bg:#0a0a0a;
+    }
+    
+    .app[data-theme="light"]{
+      --fondo:#f5f7f5;
+      --sup:#ffffff;
+      --sup2:#f0f2f0;
+      --borde:rgba(0,0,0,0.1);
+      --txt:#1a1a1a;
+      --txt2:#666;
+      --verde:#16a34a;
+      --vd:#15803d;
+      --rojo:#dc2626;
+      --amarillo:#d97706;
+      --card-bg:#ffffff;
+      --header-bg:#f0faf2;
+    }
+    
+    .app{
+      font-family:'Inter',sans-serif;
+      background:var(--fondo);
+      color:var(--txt);
+      min-height:100vh;
+      transition:background 0.3s,color 0.3s;
+    }
+
+    /* HEADER */
+    .header{
+      background:var(--header-bg);
+      border-bottom:1px solid rgba(29,185,84,0.2);
+      position:relative;
+      overflow:hidden;
+    }
+    
+    .header-logo-wrap{
+      position:relative;
+      width:100%;
+      height:110px;
+      overflow:hidden;
+      background:linear-gradient(135deg, #1a4d0a 0%, #2d6a32 50%, #1DB954 100%);
+    }
+    
+    .header-content{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 18px;
+    }
+    
+    .logo{
+      font-family:'Bebas Neue',cursive;
+      font-size:30px;
+      letter-spacing:4px;
+      color:#5edd7a;
+      line-height:1;
+      text-shadow:0 1px 8px rgba(0,0,0,0.6);
+    }
+    
+    .logo span{color:#fff;}
+    
+    .logo-sub{
+      font-size:10px;
+      color:rgba(255,255,255,0.6);
+      letter-spacing:1.5px;
+      margin-top:1px;
+    }
+    
+    .header-btns{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    
+    .theme-btn{
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,0.2);
+      background:rgba(0,0,0,0.35);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:15px;
+      transition:all 0.2s;
+      backdrop-filter:blur(4px);
+    }
+    
+    .tg-badge{
+      background:rgba(29,185,84,0.25);
+      border:1px solid rgba(29,185,84,0.5);
+      border-radius:20px;
+      padding:5px 12px;
+      font-size:11px;
+      color:#5edd7a;
+      display:flex;
+      align-items:center;
+      gap:5px;
+      cursor:pointer;
+      backdrop-filter:blur(4px);
+    }
+    
+    .tg-dot{
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      background:#5edd7a;
+      animation:pulse 2s infinite;
+    }
+    
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+    
+    .billetes-layer{
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+      overflow:hidden;
+    }
+    
+    @keyframes llover{
+      0%{transform:translateY(-25px) rotate(var(--rot));opacity:0;}
+      12%{opacity:1;}
+      80%{opacity:0.85;}
+      100%{transform:translateY(130px) rotate(var(--rot2));opacity:0;}
+    }
+
+    .tabs{
+      display:flex;
+      background:var(--sup);
+      border-bottom:1px solid var(--borde);
+      overflow-x:auto;
+      scrollbar-width:none;
+    }
+    
+    .tabs::-webkit-scrollbar{display:none;}
+    
+    .tab{
+      padding:12px 16px;
+      font-size:12px;
+      font-weight:500;
+      color:var(--txt2);
+      cursor:pointer;
+      border-bottom:2px solid transparent;
+      white-space:nowrap;
+      transition:all 0.2s;
+    }
+    
+    .tab.active{
+      color:var(--verde);
+      border-bottom-color:var(--verde);
+    }
+    
+    .content{
+      padding:16px;
+      max-width:680px;
+      margin:0 auto;
+      padding-bottom:20px;
+    }
+    
+    .page{display:none;}
+    .page.active{display:block;}
+    
+    .resumen-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:10px;
+      margin-bottom:20px;
+    }
+    
+    .stat-card{
+      background:var(--sup);
+      border:1px solid var(--borde);
+      border-radius:12px;
+      padding:14px;
+      text-align:center;
+      cursor:pointer;
+      transition:all 0.2s;
+    }
+    
+    .stat-card:hover{transform:translateY(-2px);}
+    .stat-card.pend:hover{border-color:var(--amarillo);box-shadow:0 4px 16px rgba(239,159,39,0.15);}
+    .stat-card.venc:hover{border-color:var(--rojo);box-shadow:0 4px 16px rgba(226,75,74,0.15);}
+    .stat-card.pag:hover{border-color:var(--verde);box-shadow:0 4px 16px rgba(29,185,84,0.15);}
+    
+    .stat-num{
+      font-family:'Bebas Neue',cursive;
+      font-size:34px;
+      letter-spacing:1px;
+      line-height:1;
+      margin-bottom:3px;
+    }
+    
+    .stat-lbl{
+      font-size:10px;
+      color:var(--txt2);
+      text-transform:uppercase;
+      letter-spacing:0.5px;
+    }
+    
+    .c-verde{color:var(--verde);}
+    .c-rojo{color:var(--rojo);}
+    .c-amarillo{color:var(--amarillo);}
+    
+    .sec-titulo{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:1.5px;
+      color:var(--txt2);
+      margin-bottom:10px;
+      font-weight:500;
+    }
+    
+    .alerta-banner{
+      border-radius:10px;
+      padding:11px 14px;
+      margin-bottom:10px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    
+    .alerta-roja{
+      background:rgba(220,38,38,0.1);
+      border:1px solid rgba(220,38,38,0.25);
+    }
+    
+    .alerta-amarilla{
+      background:rgba(217,119,6,0.1);
+      border:1px solid rgba(217,119,6,0.25);
+    }
+    
+    .alerta-icon{font-size:18px;flex-shrink:0;}
+    .alerta-txt{font-size:13px;}
+    
+    .factura-card{
+      background:var(--card-bg);
+      border:1px solid var(--borde);
+      border-radius:12px;
+      padding:14px;
+      margin-bottom:8px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      position:relative;
+      overflow:hidden;
+    }
+    
+    .factura-card::before{
+      content:'';
+      position:absolute;
+      left:0;
+      top:0;
+      bottom:0;
+      width:3px;
+      border-radius:0;
+    }
+    
+    .factura-card.pendiente::before{background:var(--amarillo);}
+    .factura-card.vencida::before{background:var(--rojo);}
+    .factura-card.pagada::before{background:var(--verde);}
+    
+    .emp-ico{
+      width:40px;
+      height:40px;
+      border-radius:10px;
+      background:var(--sup2);
+      border:1px solid var(--borde);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      flex-shrink:0;
+    }
+    
+    .f-info{flex:1;min-width:0;}
+    .f-empresa{font-size:14px;font-weight:600;margin-bottom:1px;}
+    .f-titular{font-size:12px;color:var(--txt2);}
+    
+    .f-right{text-align:right;flex-shrink:0;}
+    .f-monto{
+      font-family:'Bebas Neue',cursive;
+      font-size:20px;
+      letter-spacing:0.5px;
+    }
+    .f-vence{font-size:11px;color:var(--txt2);margin-bottom:5px;}
+    
+    .badge{
+      display:inline-block;
+      padding:3px 8px;
+      border-radius:20px;
+      font-size:11px;
+      font-weight:500;
+    }
+    
+    .badge-pendiente{background:rgba(217,119,6,0.15);color:var(--amarillo);}
+    .badge-vencida{background:rgba(220,38,38,0.15);color:var(--rojo);}
+    .badge-pagada{background:rgba(22,163,74,0.15);color:var(--verde);}
+    
+    .acciones{
+      display:flex;
+      gap:5px;
+      margin-top:8px;
+    }
+    
+    .btn{
+      padding:5px 10px;
+      border-radius:7px;
+      font-size:11px;
+      font-weight:500;
+      cursor:pointer;
+      border:1px solid var(--borde);
+      background:var(--sup2);
+      color:var(--txt);
+      transition:all 0.15s;
+    }
+    
+    .btn.pagar{
+      background:rgba(22,163,74,0.12);
+      border-color:rgba(22,163,74,0.3);
+      color:var(--verde);
+    }
+    
+    .btn.no-pago{
+      background:rgba(220,38,38,0.1);
+      border-color:rgba(220,38,38,0.3);
+      color:var(--rojo);
+    }
+    
+    .form-group{margin-bottom:14px;}
+    
+    .form-label{
+      font-size:11px;
+      color:var(--txt2);
+      margin-bottom:5px;
+      display:block;
+      font-weight:500;
+      text-transform:uppercase;
+      letter-spacing:0.5px;
+    }
+    
+    .form-input,.form-select{
+      width:100%;
+      background:var(--sup);
+      border:1px solid var(--borde);
+      border-radius:8px;
+      padding:9px 12px;
+      color:var(--txt);
+      font-size:14px;
+      font-family:'Inter',sans-serif;
+      outline:none;
+      transition:border-color 0.2s;
+    }
+    
+    .form-input:focus,.form-select:focus{border-color:rgba(29,185,84,0.5);}
+    .form-select option{background:var(--sup2);}
+    
+    .upload-area{
+      border:1.5px dashed rgba(29,185,84,0.3);
+      border-radius:12px;
+      padding:28px;
+      text-align:center;
+      cursor:pointer;
+      background:rgba(29,185,84,0.03);
+      transition:all 0.2s;
+      margin-bottom:14px;
+    }
+    
+    .upload-area:hover{border-color:rgba(29,185,84,0.6);}
+    .upload-icon{font-size:28px;margin-bottom:8px;}
+    .upload-txt{font-size:13px;color:var(--txt2);}
+    .upload-txt strong{color:var(--verde);}
+    
+    .btn-principal{
+      width:100%;
+      padding:13px;
+      background:var(--verde);
+      color:#000;
+      border:none;
+      border-radius:10px;
+      font-family:'Bebas Neue',cursive;
+      letter-spacing:2px;
+      font-size:17px;
+      cursor:pointer;
+      transition:all 0.2s;
+    }
+    
+    .btn-principal:hover{background:var(--vd);transform:translateY(-1px);}
+    
+    .divider{
+      border:none;
+      border-top:1px solid var(--borde);
+      margin:16px 0;
+    }
+    
+    .config-section{
+      background:var(--sup);
+      border:1px solid var(--borde);
+      border-radius:12px;
+      padding:14px 18px;
+      margin-bottom:10px;
+    }
+    
+    .config-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    
+    .config-titulo{font-size:14px;font-weight:500;}
+    .config-sub{font-size:12px;color:var(--txt2);margin-top:2px;}
+    
+    .toggle{
+      width:42px;
+      height:22px;
+      background:var(--sup2);
+      border-radius:11px;
+      position:relative;
+      cursor:pointer;
+      border:1px solid var(--borde);
+      transition:all 0.2s;
+      flex-shrink:0;
+    }
+    
+    .toggle.on{background:rgba(29,185,84,0.3);border-color:var(--verde);}
+    
+    .toggle::after{
+      content:'';
+      position:absolute;
+      width:16px;
+      height:16px;
+      background:#888;
+      border-radius:50%;
+      top:2px;
+      left:2px;
+      transition:all 0.2s;
+    }
+    
+    .toggle.on::after{left:22px;background:var(--verde);}
+    
+    .tg-setup{
+      background:rgba(29,185,84,0.06);
+      border:1px solid rgba(29,185,84,0.2);
+      border-radius:12px;
+      padding:18px;
+      margin-bottom:18px;
+    }
+    
+    .tg-titulo{font-size:13px;font-weight:600;margin-bottom:10px;color:var(--verde);}
+    
+    .tg-paso{
+      display:flex;
+      gap:10px;
+      margin-bottom:8px;
+      align-items:flex-start;
+    }
+    
+    .paso-num{
+      width:20px;
+      height:20px;
+      border-radius:50%;
+      background:var(--verde);
+      color:#000;
+      font-size:10px;
+      font-weight:700;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+      margin-top:2px;
+    }
+    
+    .paso-txt{font-size:12px;color:var(--txt2);line-height:1.5;}
+    .paso-txt code{background:var(--sup2);padding:1px 5px;border-radius:4px;font-size:11px;color:var(--txt);}
+    
+    .ia-loader{
+      display:none;
+      background:rgba(29,185,84,0.08);
+      border:1px solid rgba(29,185,84,0.2);
+      border-radius:10px;
+      padding:14px;
+      margin-bottom:14px;
+      text-align:center;
+      font-size:13px;
+      color:var(--verde);
+    }
+    
+    .ia-loader.show{display:block;}
+    
+    .spinner{
+      display:inline-block;
+      width:14px;
+      height:14px;
+      border:2px solid rgba(29,185,84,0.3);
+      border-top-color:var(--verde);
+      border-radius:50%;
+      animation:spin 0.8s linear infinite;
+      margin-right:7px;
+      vertical-align:middle;
+    }
+    
+    @keyframes spin{to{transform:rotate(360deg);}}
+    
+    .campos-ia{
+      background:rgba(29,185,84,0.05);
+      border:1px solid rgba(29,185,84,0.15);
+      border-radius:10px;
+      padding:12px;
+      margin-bottom:14px;
+      display:none;
+    }
+    
+    .campos-ia.show{display:block;}
+    
+    .campos-ia-titulo{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:1px;
+      color:var(--verde);
+      margin-bottom:8px;
+      font-weight:500;
+    }
+    
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .file-input{display:none;}
+    
+    .flash{
+      position:fixed;
+      top:12px;
+      left:50%;
+      transform:translateX(-50%);
+      background:var(--verde);
+      color:#000;
+      padding:9px 22px;
+      border-radius:30px;
+      font-family:'Bebas Neue',cursive;
+      letter-spacing:1.5px;
+      font-size:14px;
+      z-index:999;
+      opacity:0;
+      transition:opacity 0.3s;
+      pointer-events:none;
+    }
+    
+    .flash.show{opacity:1;}
+    
+    .chart-container{
+      background:var(--sup);
+      border:1px solid var(--borde);
+      border-radius:12px;
+      padding:16px;
+      margin-bottom:14px;
+    }
+    
+    .cat-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:8px;
+      margin-bottom:16px;
+    }
+    
+    .cat-card{
+      background:var(--sup);
+      border:1px solid var(--borde);
+      border-radius:10px;
+      padding:12px;
+    }
+    
+    .monthly-total{
+      background:var(--sup);
+      border:1px solid rgba(29,185,84,0.3);
+      border-radius:12px;
+      padding:16px;
+      margin-bottom:16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    
+    .monthly-num{
+      font-family:'Bebas Neue',cursive;
+      font-size:32px;
+      color:var(--verde);
+      letter-spacing:1px;
+    }
+    
+    .hist-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:10px 0;
+      border-bottom:0.5px solid var(--borde);
+    }
+    
+    .hist-info .emp{font-size:13px;font-weight:500;}
+    .hist-info .fecha{font-size:11px;color:var(--txt2);}
+    .hist-monto{font-family:'Bebas Neue',cursive;font-size:17px;}
+    
+    .notif-preview{
+      background:var(--sup2);
+      border:1px solid var(--borde);
+      border-radius:12px;
+      padding:12px 14px;
+      margin-bottom:10px;
+    }
+    
+    .notif-header{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      margin-bottom:6px;
+    }
+    
+    .notif-app{font-size:11px;color:var(--txt2);font-weight:500;}
+    .notif-time{font-size:11px;color:var(--txt2);margin-left:auto;}
+    .notif-titulo{font-size:13px;font-weight:600;margin-bottom:2px;}
+    .notif-body{font-size:12px;color:var(--txt2);}
+    
+    .modal-overlay{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.7);
+      z-index:200;
+      align-items:flex-end;
+      justify-content:center;
+    }
+    
+    .modal-overlay.show{display:flex;animation:fadeIn 0.2s;}
+    
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+    
+    .modal-sheet{
+      background:var(--sup);
+      border-radius:20px 20px 0 0;
+      width:100%;
+      max-width:680px;
+      max-height:85vh;
+      overflow-y:auto;
+      animation:slideUp 0.25s ease-out;
+    }
+    
+    @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+    
+    .modal-header{
+      padding:16px 20px 12px;
+      border-bottom:1px solid var(--borde);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      position:sticky;
+      top:0;
+      background:var(--sup);
+      z-index:1;
+    }
+    
+    .modal-drag{
+      width:36px;
+      height:4px;
+      background:var(--borde);
+      border-radius:2px;
+      margin:0 auto 14px;
+      display:block;
+    }
+    
+    .modal-titulo{
+      font-family:'Bebas Neue',cursive;
+      font-size:22px;
+      letter-spacing:2px;
+    }
+    
+    .modal-subtitulo{font-size:12px;color:var(--txt2);margin-top:2px;}
+    
+    .modal-close{
+      width:30px;
+      height:30px;
+      border-radius:50%;
+      border:1px solid var(--borde);
+      background:var(--sup2);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:16px;
+      color:var(--txt2);
+    }
+    
+    .modal-body{padding:16px 20px 30px;}
+    
+    .modal-total-banner{
+      border-radius:10px;
+      padding:14px 16px;
+      margin-bottom:16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    
+    .modal-total-banner.pend{
+      background:rgba(239,159,39,0.08);
+      border:1px solid rgba(239,159,39,0.2);
+    }
+    
+    .modal-total-banner.venc{
+      background:rgba(226,75,74,0.08);
+      border:1px solid rgba(226,75,74,0.2);
+    }
+    
+    .modal-total-banner.pag{
+      background:rgba(29,185,84,0.08);
+      border:1px solid rgba(29,185,84,0.2);
+    }
+    
+    .modal-total-num{
+      font-family:'Bebas Neue',cursive;
+      font-size:26px;
+      letter-spacing:1px;
+    }
+    
+    .modal-total-lbl{font-size:12px;color:var(--txt2);}
+  </style>
+</head>
+
+<body>
+  <div class="app" id="app" data-theme="dark">
+    <div class="flash" id="flash"></div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modalOverlay" onclick="cerrarModal(event)">
+      <div class="modal-sheet" id="modalSheet">
+        <div class="modal-header">
+          <div>
+            <span class="modal-drag" style="display:block;"></span>
+            <div class="modal-titulo" id="modalTitulo"></div>
+            <div class="modal-subtitulo" id="modalSub"></div>
+          </div>
+          <div class="modal-close" onclick="cerrarModal()">✕</div>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    </div>
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="header-logo-wrap">
+        <div class="billetes-layer" id="billetesLayer"></div>
+        <div class="header-content">
+          <div class="logo-block">
+            <div class="logo">PAGA <span>DIOS</span></div>
+            <div class="logo-sub">Gestor inteligente de facturas</div>
+          </div>
+          <div class="header-btns">
+            <div class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</div>
+            <div class="tg-badge" onclick="irA('config')"><div class="tg-dot"></div>Telegram</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" onclick="cambiarTab('inicio',this)">Resumen</div>
+      <div class="tab" onclick="cambiarTab('facturas',this)">Facturas</div>
+      <div class="tab" onclick="cambiarTab('agregar',this)">+ Agregar</div>
+      <div class="tab" onclick="cambiarTab('historial',this)">Gastos</div>
+      <div class="tab" onclick="cambiarTab('alertas',this)">Alertas</div>
+      <div class="tab" onclick="cambiarTab('config',this)">Config</div>
+    </div>
+
+    <!-- INICIO -->
+    <div id="tab-inicio" class="page active">
+      <div class="content">
+        <div style="margin-bottom:14px;">
+          <div style="font-size:20px;font-family:'Bebas Neue';letter-spacing:1px;color:var(--txt2);">MARZO 2026</div>
+          <div style="font-size:12px;color:var(--txt2);">Tocá una tarjeta para ver el detalle</div>
+        </div>
+        <div class="resumen-grid">
+          <div class="stat-card pend" onclick="abrirModal('pendiente')">
+            <div class="stat-num c-amarillo" id="cnt-pend">0</div>
+            <div class="stat-lbl">Pendientes</div>
+          </div>
+          <div class="stat-card venc" onclick="abrirModal('vencida')">
+            <div class="stat-num c-rojo" id="cnt-venc">0</div>
+            <div class="stat-lbl">Vencidas</div>
+          </div>
+          <div class="stat-card pag" onclick="abrirModal('pagada')">
+            <div class="stat-num c-verde" id="cnt-pag">0</div>
+            <div class="stat-lbl">Pagadas</div>
+          </div>
+        </div>
+        <div class="sec-titulo">Urgentes</div>
+        <div id="alertas-urgentes"></div>
+        <div class="divider"></div>
+        <div class="sec-titulo">Próximas facturas</div>
+        <div id="lista-inicio"></div>
+      </div>
+    </div>
+
+    <!-- FACTURAS -->
+    <div id="tab-facturas" class="page">
+      <div class="content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div class="sec-titulo" style="margin:0;">Todas las facturas</div>
+          <select class="form-select" style="width:auto;padding:5px 8px;font-size:11px;" onchange="filtrarFacturas(this.value)">
+            <option value="todas">Todas</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="pagada">Pagadas</option>
+            <option value="vencida">Vencidas</option>
+          </select>
+        </div>
+        <div id="lista-facturas"></div>
+      </div>
+    </div>
+
+    <!-- AGREGAR -->
+    <div id="tab-agregar" class="page">
+      <div class="content">
+        <div class="sec-titulo">Nueva factura</div>
+        
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+          <input type="file" class="file-input" id="fileInput" accept="image/*,.pdf" onchange="procesarArchivo(this)">
+          <div class="upload-icon">📎</div>
+          <div class="upload-txt">
+            <strong>Tocá aquí</strong> o arrastrá una foto/PDF<br>
+            <span style="font-size:11px;color:var(--txt2);">La IA detecta: empresa, monto, fecha y titular</span>
+          </div>
+        </div>
+        
+        <div id="imagePreview" style="display:none;margin-bottom:14px;border-radius:12px;overflow:hidden;border:1px solid var(--borde);">
+          <img id="previewImg" style="width:100%;max-height:200px;object-fit:cover;">
+        </div>
+        
+        <div class="ia-loader" id="iaLoader">
+          <span class="spinner"></span>
+          <span id="ocrTexto">Analizando imagen con IA...</span>
+          <div style="font-size:10px;color:var(--txt2);margin-top:4px;">Esto puede tardar unos segundos</div>
+        </div>
+        
+        <div class="campos-ia" id="camposIa">
+          <div class="campos-ia-titulo">📄 Datos detectados por IA</div>
+          <div id="ocrResultados" style="font-size:12px;line-height:1.8;"></div>
+        </div>
+        
+        <div class="divider" style="margin:8px 0 14px;"></div>
+        <div style="font-size:11px;color:var(--txt2);margin-bottom:12px;text-align:center;">O cargá manualmente</div>
+        
+        <div class="row2">
+          <div class="form-group">
+            <label class="form-label">Empresa *</label>
+            <input type="text" class="form-input" id="f-empresa" placeholder="Ej: EDESUR">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Titular *</label>
+            <input type="text" class="form-input" id="f-titular" placeholder="Ej: Juan García">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="form-group">
+            <label class="form-label">Monto ($) *</label>
+            <input type="number" class="form-input" id="f-monto" placeholder="12400">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Vencimiento *</label>
+            <input type="date" class="form-input" id="f-vence">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoría</label>
+          <select class="form-select" id="f-cat">
+            <option value="💡">💡 Luz / Electricidad</option>
+            <option value="💧">💧 Agua / Gas</option>
+            <option value="📱">📱 Teléfono / Internet</option>
+            <option value="🏠">🏠 Alquiler / Expensas</option>
+            <option value="🏥">🏥 Salud / Medicina</option>
+            <option value="🚗">🚗 Seguro / Auto</option>
+            <option value="📺">📺 Streaming</option>
+            <option value="💳">💳 Tarjeta de crédito</option>
+            <option value="📄">📄 Otro</option>
+          </select>
+        </div>
+        <div class="row2">
+          <div class="form-group">
+            <label class="form-label">Aviso previo</label>
+            <select class="form-select" id="f-aviso">
+              <option value="1">1 día antes</option>
+              <option value="3" selected>3 días antes</option>
+              <option value="7">1 semana antes</option>
+              <option value="0">El mismo día</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Se repite</label>
+            <select class="form-select" id="f-rep">
+              <option value="no">No se repite</option>
+              <option value="mensual" selected>Mensual</option>
+              <option value="bimestral">Bimestral</option>
+              <option value="anual">Anual</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-principal" onclick="guardarFactura()">GUARDAR FACTURA</button>
+      </div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div id="tab-historial" class="page">
+      <div class="content">
+        <div class="sec-titulo">Resumen mensual</div>
+        <div class="monthly-total">
+          <div>
+            <div style="font-size:12px;color:var(--txt2);">Total gastado — Marzo 2026</div>
+            <div style="font-size:12px;color:var(--txt2);margin-top:2px;">Facturas pagadas</div>
+          </div>
+          <div class="monthly-num" id="total-mensual">$0</div>
+        </div>
+        
+        <div class="sec-titulo">Distribución de gastos</div>
+        <div class="chart-container" style="position:relative;height:250px;margin-bottom:16px;">
+          <canvas id="chartTorta"></canvas>
+        </div>
+        
+        <div class="sec-titulo">Evolución mensual</div>
+        <div class="chart-container" style="position:relative;height:200px;margin-bottom:16px;">
+          <canvas id="chartBarras"></canvas>
+        </div>
+        
+        <div class="sec-titulo">Gasto por categoría</div>
+        <div class="cat-grid" id="cat-grid"></div>
+        
+        <div class="divider"></div>
+        <div class="sec-titulo">Historial completo</div>
+        <div id="historial-lista"></div>
+      </div>
+    </div>
+
+    <!-- ALERTAS -->
+    <div id="tab-alertas" class="page">
+      <div class="content">
+        <div class="sec-titulo">Vista previa — Telegram</div>
+        <div style="font-size:12px;color:var(--txt2);margin-bottom:14px;">Así te llegan las notificaciones:</div>
+        
+        <div class="notif-preview">
+          <div class="notif-header">
+            <span style="font-size:15px;">🤖</span>
+            <span class="notif-app">PAGA DIOS</span>
+            <span class="notif-time">hace 2 min</span>
+          </div>
+          <div class="notif-titulo">🔴 VENCE HOY</div>
+          <div class="notif-body">EDESUR · Juan García<br>Monto: <strong style="color:var(--txt);">$12.400</strong><br><br>✅ /pague_edesur &nbsp; ❌ /no_pague_edesur</div>
+        </div>
+        
+        <div class="notif-preview">
+          <div class="notif-header">
+            <span style="font-size:15px;">🤖</span>
+            <span class="notif-app">PAGA DIOS</span>
+            <span class="notif-time">ayer</span>
+          </div>
+          <div class="notif-titulo">🟡 Vence en 3 días</div>
+          <div class="notif-body">Personal · $8.500 · 17 mar 2026<br><br>✅ /pague_personal &nbsp; ❌ /no_pague_personal</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIG -->
+    <div id="tab-config" class="page">
+      <div class="content">
+        <div class="sec-titulo">Conectar Telegram</div>
+        <div class="tg-setup">
+          <div class="tg-titulo">Configuración del bot</div>
+          <div class="tg-paso">
+            <div class="paso-num">1</div>
+            <div class="paso-txt">Abrí Telegram y buscá <strong>@BotFather</strong></div>
+          </div>
+          <div class="tg-paso">
+            <div class="paso-num">2</div>
+            <div class="paso-txt">Escribí <code>/newbot</code> y elegí el nombre <strong>PAGA DIOS</strong></div>
+          </div>
+          <div class="tg-paso">
+            <div class="paso-num">3</div>
+            <div class="paso-txt">Copiá el token y pegalo abajo</div>
+          </div>
+          <div class="tg-paso">
+            <div class="paso-num">4</div>
+            <div class="paso-txt">¡Listo! Recibís alertas en Telegram</div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Token del Bot</label>
+          <input type="text" class="form-input" id="tg-token" placeholder="123456789:ABCDEF...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tu Chat ID</label>
+          <input type="text" class="form-input" id="tg-chatid" placeholder="Ej: 123456789">
+        </div>
+        <button class="btn-principal" style="margin-bottom:20px;" onclick="guardarTelegram()">CONECTAR TELEGRAM</button>
+        
+        <div class="divider"></div>
+        <div class="sec-titulo">Apariencia</div>
+        <div class="config-section">
+          <div class="config-header">
+            <div>
+              <div class="config-titulo">Modo nocturno</div>
+              <div class="config-sub">Fondo oscuro</div>
+            </div>
+            <div class="toggle on" id="toggle-dark" onclick="toggleTheme()"></div>
+          </div>
+        </div>
+        
+        <div style="text-align:center;font-size:11px;color:var(--txt2);padding-bottom:10px;">PAGA DIOS v3.0 · Hecho con amor en Argentina 🇦🇷</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== VARIABLES GLOBALES ==========
+    let darkMode = true;
+    let chartTorta = null;
+    let chartBarras = null;
+    let ocrWorker = null;
+
+    // Datos iniciales
+    const facturas = [
+      {id:1, empresa:'EDESUR', titular:'Juan García', monto:12400, vence:'2026-03-14', estado:'vencida', icono:'💡', rep:'mensual'},
+      {id:2, empresa:'Personal', titular:'María López', monto:8500, vence:'2026-03-17', estado:'pendiente', icono:'📱', rep:'mensual'},
+      {id:3, empresa:'Metrogas', titular:'Juan García', monto:5200, vence:'2026-03-25', estado:'pendiente', icono:'💧', rep:'bimestral'},
+      {id:4, empresa:'Netflix', titular:'Familia García', monto:3200, vence:'2026-03-10', estado:'pagada', icono:'📺', rep:'mensual'},
+      {id:5, empresa:'Expensas', titular:'Juan García', monto:22000, vence:'2026-03-05', estado:'pagada', icono:'🏠', rep:'mensual'},
+      {id:6, empresa:'OSDE', titular:'Familia García', monto:18600, vence:'2026-02-28', estado:'pagada', icono:'🏥', rep:'mensual'},
+    ];
+
+    const badgeClass = {pendiente:'badge-pendiente', vencida:'badge-vencida', pagada:'badge-pagada'};
+    const badgeLbl = {pendiente:'Pendiente', vencida:'Vencida', pagada:'Pagada'};
+    const montoColor = {pendiente:'c-amarillo', vencida:'c-rojo', pagada:'c-verde'};
+    const coloresGrafico = ['#1DB954', '#EF9F27', '#E24B4A', '#3B82F6', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B'];
+
+    // ========== FUNCIONES AUXILIARES ==========
+    function fmt(n){return '$'+Math.round(n).toLocaleString('es-AR');}
+    function fmtFecha(f){
+      const d = new Date(f+'T12:00:00');
+      return d.toLocaleDateString('es-AR', {day:'numeric', month:'short', year:'numeric'});
+    }
+
+    // ========== LOCALSTORAGE ==========
+    function guardarEnStorage(){
+      localStorage.setItem('pagaDios_facturas', JSON.stringify(facturas));
+    }
+
+    function cargarDesdeStorage(){
+      const guardado = localStorage.getItem('pagaDios_facturas');
+      return guardado ? JSON.parse(guardado) : null;
+    }
+
+    function iniciarDatos(){
+      const guardado = cargarDesdeStorage();
+      if(guardado && guardado.length > 0){
+        facturas.length = 0;
+        guardado.forEach(f => facturas.push(f));
+      }
+    }
+
+    // ========== OCR CON TESSERACT ==========
+    async function initOCR(){
+      try {
+        if(typeof Tesseract === 'undefined'){
+          console.warn('Tesseract no disponible');
+          return false;
+        }
+        // Crear worker una sola vez
+        ocrWorker = await Tesseract.createWorker('spa');
+        console.log('OCR inicializado correctamente');
+        return true;
+      } catch(e){
+        console.error('Error inicializando OCR:', e);
+        return false;
+      }
+    }
+
+    async function procesarArchivo(input){
+      if(!input.files[0]) return;
+      
+      const file = input.files[0];
+      console.log('Archivo:', file.name, 'Tipo:', file.type);
+      
+      const esImagen = file.type.startsWith('image/');
+      const esPDF = file.type === 'application/pdf';
+      
+      if(!esImagen && !esPDF){
+        flash('❌ Solo imágenes (JPG, PNG) o PDFs');
+        return;
+      }
+      
+      // Mostrar preview
+      if(esImagen){
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById('previewImg').src = e.target.result;
+          document.getElementById('imagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+      
+      // Mostrar loader
+      document.getElementById('iaLoader').classList.add('show');
+      document.getElementById('camposIa').classList.remove('show');
+      document.getElementById('ocrTexto').textContent = 'Analizando...';
+      
+      try {
+        let texto = '';
+        
+        if(esImagen){
+          // Usar worker si está disponible, sino método directo
+          if(ocrWorker){
+            document.getElementById('ocrTexto').textContent = 'Procesando imagen...';
+            const result = await ocrWorker.recognize(file);
+            texto = result.data.text;
+          } else {
+            // Fallback: método directo sin worker
+            document.getElementById('ocrTexto').textContent = 'Cargando IA (puede tardar)...';
+            const result = await Tesseract.recognize(file, 'spa', {
+              logger: m => {
+                if(m.status === 'recognizing text'){
+                  const pct = Math.round(m.progress * 100);
+                  document.getElementById('ocrTexto').textContent = `Leyendo... ${pct}%`;
+                }
+              }
+            });
+            texto = result.data.text;
+          }
+        } else {
+          // PDF simulado
+          await new Promise(r => setTimeout(r, 1500));
+          texto = "FACTURA\nEDESUR\nTitular: Juan Garcia\nTotal: $12.400,50\nVencimiento: 14/04/2026";
+        }
+        
+        console.log('Texto OCR:', texto);
+        
+        if(!texto || texto.trim().length < 3){
+          throw new Error('No se detectó texto. Probá con mejor calidad.');
+        }
+        
+        const datos = extraerDatosDeTexto(texto);
+        mostrarResultadosOCR(datos, texto);
+        
+      } catch(err){
+        console.error('Error OCR:', err);
+        flash('⚠️ ' + err.message);
+        
+        // Mostrar formulario manual igual
+        document.getElementById('ocrResultados').innerHTML = `
+          <div style="color:var(--rojo);margin-bottom:8px;">No se pudo leer automáticamente</div>
+          <div style="font-size:11px;color:var(--txt2);">Completá los datos manualmente</div>
+        `;
+        document.getElementById('camposIa').classList.add('show');
+        
+      } finally {
+        document.getElementById('iaLoader').classList.remove('show');
+      }
+    }
+
+    function extraerDatosDeTexto(texto) {
+  const datos = { empresa: '', titular: '', monto: '', fecha: '', categoria: '📄' };
+  
+  // 1. Normalización: Eliminar saltos de línea innecesarios y espacios múltiples
+  const textoLimpio = texto.replace(/\s+/g, ' ');
+  const textoUpper = textoLimpio.toUpperCase();
+
+  // 2. EMPRESA (Prioridad por palabras clave)
+  const diccionarioEmpresas = {
+    'EDESUR': '💡', 'EDENOR': '💡', 'METROGAS': '💧', 'NATURGY': '💧',
+    'AYSA': '💧', 'PERSONAL': '📱', 'CLARO': '📱', 'MOVISTAR': '📱',
+    'OSDE': '🏥', 'SWISS MEDICAL': '🏥', 'GALENO': '🏥', 'NETFLIX': '📺'
+  };
+
+  for (let [nombre, icono] of Object.entries(diccionarioEmpresas)) {
+    if (textoUpper.includes(nombre)) {
+      datos.empresa = nombre;
+      datos.categoria = icono;
+      break;
+    }
+  }
+
+  // 3. MONTO (Búsqueda del "Total a Pagar")
+  // Esta regex busca un número después de palabras clave, ignorando puntos de miles
+  const regexMonto = /(?:TOTAL|A PAGAR|IMPORTE|NETO|VENCIMIENTO|SUBTOTAL).*?(\d{1,3}(?:\.\d{3})*(?:,\d{2})|\d{3,}(?:[.,]\d{2})?)/i;
+  const matchMonto = textoUpper.match(regexMonto);
+  if (matchMonto) {
+    let valor = matchMonto[1].replace(/\./g, '').replace(',', '.');
+    datos.monto = Math.round(parseFloat(valor));
+  }
+
+  // 4. FECHA DE VENCIMIENTO
+  // Buscamos fechas que estén cerca de la palabra "VENCE" o "VENCIMIENTO"
+  const regexFecha = /(?:VENCE|VENCIMIENTO|PAGO).*?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i;
+  const matchFecha = textoUpper.match(regexFecha);
+  if (matchFecha) {
+    let partes = matchFecha[1].split(/[\/\-]/);
+    let dia = partes[0].padStart(2, '0');
+    let mes = partes[1].padStart(2, '0');
+    let anio = partes[2].length === 2 ? '20' + partes[2] : partes[2];
+    datos.fecha = `${anio}-${mes}-${dia}`;
+  }
+
+  // 5. TITULAR (Suele estar después de "Nombre" o "Cliente")
+  const regexTitular = /(?:TITULAR|CLIENTE|NOMBRE|USUARIO)[:\s]+([A-Z\s]{5,25})/i;
+  const matchTitular = textoUpper.match(regexTitular);
+  if (matchTitular) {
+    datos.titular = matchTitular[1].trim();
+  }
+
+  return datos;
+}
+
+    function mostrarResultadosOCR(datos, textoRaw){
+      // Calcular confianza
+      let confianza = 0;
+      if(datos.empresa) confianza += 25;
+      if(datos.monto) confianza += 35;
+      if(datos.fecha) confianza += 25;
+      if(datos.titular) confianza += 15;
+      
+      // Llenar formulario
+      if(datos.empresa) document.getElementById('f-empresa').value = datos.empresa;
+      if(datos.titular) document.getElementById('f-titular').value = datos.titular;
+      if(datos.monto) document.getElementById('f-monto').value = datos.monto;
+      if(datos.fecha) document.getElementById('f-vence').value = datos.fecha;
+      if(datos.categoria) document.getElementById('f-cat').value = datos.categoria;
+      
+      const color = confianza >= 70 ? 'var(--verde)' : confianza >= 40 ? 'var(--amarillo)' : 'var(--rojo)';
+      const emoji = confianza >= 70 ? '✅' : confianza >= 40 ? '⚠️' : '❌';
+      
+      const html = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <span style="color:${color};font-size:18px;">${emoji}</span>
+          <span style="font-weight:600;">Datos detectados</span>
+          <span style="margin-left:auto;font-size:11px;color:${color};">${confianza}% confianza</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="padding:8px;background:var(--sup2);border-radius:6px;">
+            <div style="font-size:10px;color:var(--txt2);">Empresa</div>
+            <div style="font-weight:600;">${datos.empresa || '—'}</div>
+          </div>
+          <div style="padding:8px;background:var(--sup2);border-radius:6px;">
+            <div style="font-size:10px;color:var(--txt2);">Titular</div>
+            <div style="font-weight:600;">${datos.titular || '—'}</div>
+          </div>
+          <div style="padding:8px;background:var(--sup2);border-radius:6px;">
+            <div style="font-size:10px;color:var(--txt2);">Monto</div>
+            <div style="font-weight:600;color:var(--verde);">${datos.monto ? fmt(datos.monto) : '—'}</div>
+          </div>
+          <div style="padding:8px;background:var(--sup2);border-radius:6px;">
+            <div style="font-size:10px;color:var(--txt2);">Vencimiento</div>
+            <div style="font-weight:600;">${datos.fecha || '—'}</div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('ocrResultados').innerHTML = html;
+      document.getElementById('camposIa').classList.add('show');
+      flash(confianza >= 40 ? '✅ Factura analizada' : '⚠️ Revisá los datos');
+    }
+
+    // ========== GRÁFICOS ==========
+    function actualizarGraficos(){
+      const pagadas = facturas.filter(f => f.estado === 'pagada');
+      
+      // Datos por categoría
+      const porCategoria = {};
+      pagadas.forEach(f => {
+        if(!porCategoria[f.icono]) porCategoria[f.icono] = {total:0, nombre:f.empresa};
+        porCategoria[f.icono].total += f.monto;
+      });
+      
+      const cats = Object.keys(porCategoria);
+      const valores = cats.map(c => porCategoria[c].total);
+      const labels = cats.map(c => `${c} ${porCategoria[c].nombre}`);
+      
+      // Gráfico de torta
+      const ctxTorta = document.getElementById('chartTorta');
+      if(ctxTorta){
+        if(chartTorta) chartTorta.destroy();
+        chartTorta = new Chart(ctxTorta, {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: valores,
+              backgroundColor: coloresGrafico,
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: {color: darkMode ? '#f0f0f0' : '#1a1a1a', font: {size: 11}, boxWidth: 12}
+              }
+            }
+          }
+        });
+      }
+      
+      // Gráfico de barras
+      const meses = ['Ene','Feb','Mar','Abr','May','Jun'];
+      const gastosMes = [0,0,0,0,0,0];
+      pagadas.forEach(f => {
+        const mes = new Date(f.vence).getMonth();
+        if(mes >= 0 && mes < 6) gastosMes[mes] += f.monto;
+      });
+      
+      const ctxBarras = document.getElementById('chartBarras');
+      if(ctxBarras){
+        if(chartBarras) chartBarras.destroy();
+        chartBarras = new Chart(ctxBarras, {
+          type: 'bar',
+          data: {
+            labels: meses,
+            datasets: [{
+              data: gastosMes,
+              backgroundColor: '#1DB954',
+              borderRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {legend: {display: false}},
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {color: darkMode ? '#888' : '#666', callback: v => '$'+(v/1000)+'k'},
+                grid: {color: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}
+              },
+              x: {ticks: {color: darkMode ? '#888' : '#666'}, grid: {display: false}}
+            }
+          }
+        });
+      }
+    }
+
+    // ========== RENDERIZADO ==========
+    function crearCard(f){
+      const rep = f.rep && f.rep !== 'no' ? `<div style="font-size:10px;color:var(--verde);margin-top:2px;">🔄 ${f.rep}</div>` : '';
+      const acc = f.estado !== 'pagada' 
+        ? `<div class="acciones"><button class="btn pagar" onclick="marcar(${f.id},'pagada')">✅ Pagué</button><button class="btn no-pago" onclick="marcar(${f.id},'vencida')">❌ No pagué</button></div>`
+        : '';
+      
+      return `
+        <div class="factura-card ${f.estado}">
+          <div class="emp-ico">${f.icono}</div>
+          <div class="f-info">
+            <div class="f-empresa">${f.empresa}</div>
+            <div class="f-titular">${f.titular}</div>
+            ${rep}${acc}
+          </div>
+          <div class="f-right">
+            <div class="f-monto ${montoColor[f.estado]}">${fmt(f.monto)}</div>
+            <div class="f-vence">${fmtFecha(f.vence)}</div>
+            <span class="badge ${badgeClass[f.estado]}">${badgeLbl[f.estado]}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTodo(){
+      const pend = facturas.filter(f => f.estado === 'pendiente');
+      const venc = facturas.filter(f => f.estado === 'vencida');
+      const pag = facturas.filter(f => f.estado === 'pagada');
+      
+      document.getElementById('cnt-pend').textContent = pend.length;
+      document.getElementById('cnt-venc').textContent = venc.length;
+      document.getElementById('cnt-pag').textContent = pag.length;
+      
+      const hoy = new Date('2026-03-14');
+      const urg = [...venc, ...pend.filter(f => {
+        const d = new Date(f.vence) - hoy;
+        return d >= 0 && d <= 3*86400000;
+      })];
+      
+      document.getElementById('alertas-urgentes').innerHTML = urg.length 
+        ? urg.map(f => `<div class="alerta-banner ${f.estado==='vencida'?'alerta-roja':'alerta-amarilla'}"><div class="alerta-icon">${f.estado==='vencida'?'🔴':'🟡'}</div><div class="alerta-txt"><strong>${f.empresa}</strong> — ${f.estado==='vencida'?'Vencida':'Próxima'} · ${fmt(f.monto)}</div></div>`).join('')
+        : '<div style="font-size:13px;color:var(--txt2);padding:8px 0;">Sin urgencias. ¡Todo tranquilo!</div>';
+      
+      document.getElementById('lista-inicio').innerHTML = pend.slice(0,3).map(f => crearCard(f)).join('') 
+        || '<div style="text-align:center;padding:32px;color:var(--txt2);"><div style="font-size:36px;margin-bottom:8px;">🎉</div>¡Todo al día!</div>';
+      
+      document.getElementById('lista-facturas').innerHTML = facturas.map(f => crearCard(f)).join('');
+      
+      renderHistorial();
+      actualizarGraficos();
+    }
+
+    function renderHistorial(){
+      const pag = facturas.filter(f => f.estado === 'pagada');
+      document.getElementById('total-mensual').textContent = fmt(pag.reduce((s,f) => s+f.monto, 0));
+      
+      const cats = {};
+      pag.forEach(f => {
+        if(!cats[f.icono]) cats[f.icono] = {nombre: f.empresa, total: 0, icono: f.icono};
+        cats[f.icono].total += f.monto;
+      });
+      
+      document.getElementById('cat-grid').innerHTML = Object.values(cats)
+        .sort((a,b) => b.total-a.total)
+        .map(c => `<div class="cat-card"><div style="font-size:20px;margin-bottom:6px;">${c.icono}</div><div style="font-size:12px;color:var(--txt2);">${c.nombre}</div><div style="font-family:'Bebas Neue';font-size:20px;">${fmt(c.total)}</div></div>`)
+        .join('') || '<div style="font-size:13px;color:var(--txt2);">Sin datos</div>';
+      
+      document.getElementById('historial-lista').innerHTML = pag
+        .map(f => `<div class="hist-row"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:18px;">${f.icono}</span><div class="hist-info"><div class="emp">${f.empresa}</div><div class="fecha">${fmtFecha(f.vence)} · ${f.titular}</div></div></div><div class="hist-monto c-verde">${fmt(f.monto)}</div></div>`)
+        .join('') || '<div style="font-size:13px;color:var(--txt2);padding:8px 0;">Sin pagos registrados</div>';
+    }
+
+    // ========== ACCIONES ==========
+    function marcar(id, estado){
+      const f = facturas.find(x => x.id === id);
+      if(f){
+        f.estado = estado;
+        guardarEnStorage();
+        renderTodo();
+        flash(estado === 'pagada' ? '✅ PAGADA' : '❌ MARCADA COMO NO PAGADA');
+      }
+    }
+
+    function guardarFactura(){
+      const empresa = document.getElementById('f-empresa').value;
+      const titular = document.getElementById('f-titular').value;
+      const monto = parseFloat(document.getElementById('f-monto').value);
+      const vence = document.getElementById('f-vence').value;
+      const icono = document.getElementById('f-cat').value;
+      const rep = document.getElementById('f-rep').value;
+      
+      if(!empresa || !titular || !monto || !vence){
+        flash('❌ COMPLETÁ TODOS LOS CAMPOS');
+        return;
+      }
+      
+      facturas.unshift({
+        id: Date.now(),
+        empresa, titular, monto, vence,
+        estado: 'pendiente',
+        icono, rep
+      });
+      
+      // Limpiar formulario
+      document.getElementById('f-empresa').value = '';
+      document.getElementById('f-titular').value = '';
+      document.getElementById('f-monto').value = '';
+      document.getElementById('f-vence').value = '';
+      document.getElementById('imagePreview').style.display = 'none';
+      document.getElementById('camposIa').classList.remove('show');
+      document.getElementById('fileInput').value = '';
+      
+      guardarEnStorage();
+      renderTodo();
+      cambiarTab('facturas', document.querySelectorAll('.tab')[1]);
+      flash('✅ FACTURA GUARDADA');
+    }
+
+    function filtrarFacturas(est){
+      const lista = est === 'todas' ? facturas : facturas.filter(f => f.estado === est);
+      document.getElementById('lista-facturas').innerHTML = lista.map(f => crearCard(f)).join('') 
+        || '<div style="text-align:center;padding:32px;color:var(--txt2);">Sin resultados</div>';
+    }
+
+    // ========== NAVEGACIÓN ==========
+    function cambiarTab(id, el){
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab-'+id).classList.add('active');
+      el.classList.add('active');
+      if(id === 'historial') setTimeout(actualizarGraficos, 100);
+    }
+
+    function irA(tab){
+      const tabs = ['inicio','facturas','agregar','historial','alertas','config'];
+      cambiarTab(tab, document.querySelectorAll('.tab')[tabs.indexOf(tab)]);
+    }
+
+    function toggleTheme(){
+      darkMode = !darkMode;
+      document.getElementById('app').setAttribute('data-theme', darkMode ? 'dark' : 'light');
+      document.getElementById('themeBtn').textContent = darkMode ? '🌙' : '☀️';
+      const tog = document.getElementById('toggle-dark');
+      if(tog) darkMode ? tog.classList.add('on') : tog.classList.remove('on');
+      setTimeout(actualizarGraficos, 100);
+    }
+
+    function guardarTelegram(){
+      if(!document.getElementById('tg-token').value){
+        flash('❌ INGRESÁ EL TOKEN DEL BOT');
+        return;
+      }
+      flash('✅ TELEGRAM CONECTADO');
+    }
+
+    function flash(msg){
+      const el = document.getElementById('flash');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2500);
+    }
+
+    function abrirModal(tipo){
+      const lista = facturas.filter(f => f.estado === tipo);
+      const total = lista.reduce((s,f) => s+f.monto, 0);
+      
+      const cfg = {
+        pendiente: {titulo:'PENDIENTES', color:'var(--amarillo)', emoji:'🟡'},
+        vencida: {titulo:'VENCIDAS', color:'var(--rojo)', emoji:'🔴'},
+        pagada: {titulo:'PAGADAS', color:'var(--verde)', emoji:'✅'}
+      };
+      
+      const c = cfg[tipo];
+      document.getElementById('modalTitulo').innerHTML = `<span style="color:${c.color};">${c.emoji} ${c.titulo}</span>`;
+      document.getElementById('modalSub').textContent = `${lista.length} factura${lista.length!==1?'s':''}`;
+      
+      let html = '';
+      if(!lista.length){
+        html = `<div style="text-align:center;padding:40px;color:var(--txt2);"><div style="font-size:44px;margin-bottom:10px;">${tipo==='pagada'?'💸':'🎉'}</div>Sin facturas</div>`;
+      } else {
+        html += `<div class="modal-total-banner ${tipo==='pendiente'?'pend':tipo==='vencida'?'venc':'pag'}"><div><div class="modal-total-lbl">Total</div></div><div class="modal-total-num" style="color:${c.color};">${fmt(total)}</div></div>`;
+        html += lista.map(f => crearCard(f)).join('');
+      }
+      
+      document.getElementById('modalBody').innerHTML = html;
+      document.getElementById('modalOverlay').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function cerrarModal(e){
+      if(!e || e.target === document.getElementById('modalOverlay') || e.currentTarget?.classList?.contains('modal-close')){
+        document.getElementById('modalOverlay').classList.remove('show');
+        document.body.style.overflow = '';
+      }
+    }
+
+    // ========== INICIALIZAR ==========
+    function crearBilletes(){
+      const layer = document.getElementById('billetesLayer');
+      if(!layer) return;
+      
+      const items = [
+        {txt:'$100', left:5, delay:0, dur:2.8, rot:'-8deg', rot2:'-12deg'},
+        {txt:'$500', left:15, delay:0.6, dur:2.5, rot:'5deg', rot2:'10deg'},
+        {txt:'$200', left:27, delay:1.2, dur:3.0, rot:'-4deg', rot2:'-8deg'},
+        {txt:'$1000', left:38, delay:0.3, dur:2.6, rot:'10deg', rot2:'14deg'},
+        {txt:'$', left:50, delay:0.8, dur:2.2, rot:'0deg', rot2:'4deg', esPeso:true},
+        {txt:'$50', left:58, delay:1.5, dur:2.9, rot:'-6deg', rot2:'-10deg'},
+        {txt:'$', left:68, delay:0.2, dur:2.1, rot:'0deg', rot2:'-3deg', esPeso:true},
+        {txt:'$500', left:76, delay:1.0, dur:2.4, rot:'3deg', rot2:'7deg'},
+        {txt:'$100', left:86, delay:0.4, dur:3.1, rot:'-12deg', rot2:'-6deg'},
+        {txt:'$', left:22, delay:1.7, dur:2.3, rot:'0deg', rot2:'5deg', esPeso:true},
+        {txt:'$200', left:44, delay:0.9, dur:2.7, rot:'7deg', rot2:'11deg'},
+       {txt:'$', left:92, delay:1.3, dur:2.5, rot:'0deg', rot2:'5deg', esPeso:true}
+      ];
+      
+      items.forEach(item => {
+        const b = document.createElement('div');
+        b.style.position = 'absolute';
+        b.style.left = item.left + '%';
+        b.style.top = '-30px';
+        b.style.color = 'rgba(255,255,255,0.15)';
+        b.style.fontSize = item.esPeso ? '24px' : '14px';
+        b.style.fontWeight = 'bold';
+        b.style.fontFamily = 'Bebas Neue, sans-serif';
+        b.style.setProperty('--rot', item.rot);
+        b.style.setProperty('--rot2', item.rot2);
+        b.style.animation = `llover ${item.dur}s linear infinite`;
+        b.style.animationDelay = item.delay + 's';
+        b.textContent = item.txt;
+        layer.appendChild(b);
+      });
+    }
+
+    // ========== INICIALIZACIÓN FINAL ==========
+    window.onload = async () => {
+      iniciarDatos();
+      renderTodo();
+      crearBilletes();
+      
+      // Inicializar el worker de Tesseract para que esté listo al subir una foto
+      const ocrListo = await initOCR();
+      if (!ocrListo) {
+        console.warn("La IA de lectura no pudo pre-cargarse. Se cargará al subir un archivo.");
+      }
+    };
+  </script>
+</body>
+</html>
