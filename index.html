@@ -4,556 +4,97 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PAGA DIOS - Gestor de Facturas</title>
-  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-  
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap');
-    
     *{box-sizing:border-box;margin:0;padding:0;}
-    
     .app[data-theme="dark"]{
-      --fondo:#0a0a0a;
-      --sup:#141414;
-      --sup2:#1e1e1e;
-      --borde:rgba(255,255,255,0.08);
-      --txt:#f0f0f0;
-      --txt2:#888;
-      --verde:#1DB954;
-      --vd:#158a3e;
-      --rojo:#E24B4A;
-      --amarillo:#EF9F27;
-      --card-bg:#141414;
-      --header-bg:#0a0a0a;
+      --fondo:#0a0a0a; --sup:#141414; --sup2:#1e1e1e; --borde:rgba(255,255,255,0.08);
+      --txt:#f0f0f0; --txt2:#888; --verde:#1DB954; --vd:#158a3e; --rojo:#E24B4A;
+      --amarillo:#EF9F27; --card-bg:#141414; --header-bg:#0a0a0a;
     }
-    
     .app[data-theme="light"]{
-      --fondo:#f5f7f5;
-      --sup:#ffffff;
-      --sup2:#f0f2f0;
-      --borde:rgba(0,0,0,0.1);
-      --txt:#1a1a1a;
-      --txt2:#666;
-      --verde:#16a34a;
-      --vd:#15803d;
-      --rojo:#dc2626;
-      --amarillo:#d97706;
-      --card-bg:#ffffff;
-      --header-bg:#f0faf2;
+      --fondo:#f5f7f5; --sup:#ffffff; --sup2:#f0f2f0; --borde:rgba(0,0,0,0.1);
+      --txt:#1a1a1a; --txt2:#666; --verde:#16a34a; --vd:#15803d; --rojo:#dc2626;
+      --amarillo:#d97706; --card-bg:#ffffff; --header-bg:#f0faf2;
     }
-    
-    .app{
-      font-family:'Inter',sans-serif;
-      background:var(--fondo);
-      color:var(--txt);
-      min-height:100vh;
-      transition:background 0.3s,color 0.3s;
-    }
-
-    /* HEADER */
-    .header{
-      background:var(--header-bg);
-      border-bottom:1px solid rgba(29,185,84,0.2);
-      position:relative;
-      overflow:hidden;
-    }
-    
-    .header-logo-wrap{
-      position:relative;
-      width:100%;
-      height:110px;
-      overflow:hidden;
-      background:linear-gradient(135deg, #1a4d0a 0%, #2d6a32 50%, #1DB954 100%);
-    }
-    
-    .header-content{
-      position:absolute;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:0 18px;
-    }
-    
-    .logo{
-      font-family:'Bebas Neue',cursive;
-      font-size:30px;
-      letter-spacing:4px;
-      color:#5edd7a;
-      line-height:1;
-      text-shadow:0 1px 8px rgba(0,0,0,0.6);
-    }
-    
+    .app{ font-family:'Inter',sans-serif; background:var(--fondo); color:var(--txt); min-height:100vh; transition:background 0.3s,color 0.3s; }
+    .header{ background:var(--header-bg); border-bottom:1px solid rgba(29,185,84,0.2); position:relative; overflow:hidden; }
+    .header-logo-wrap{ position:relative; width:100%; height:110px; overflow:hidden; background:linear-gradient(135deg, #1a4d0a 0%, #2d6a32 50%, #1DB954 100%); }
+    .header-content{ position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between; padding:0 18px; }
+    .logo{ font-family:'Bebas Neue',cursive; font-size:30px; letter-spacing:4px; color:#5edd7a; line-height:1; text-shadow:0 1px 8px rgba(0,0,0,0.6); }
     .logo span{color:#fff;}
-    
-    .logo-sub{
-      font-size:10px;
-      color:rgba(255,255,255,0.6);
-      letter-spacing:1.5px;
-      margin-top:1px;
-    }
-    
-    .header-btns{
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    
-    .theme-btn{
-      width:34px;
-      height:34px;
-      border-radius:50%;
-      border:1px solid rgba(255,255,255,0.2);
-      background:rgba(0,0,0,0.35);
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:15px;
-      transition:all 0.2s;
-      backdrop-filter:blur(4px);
-    }
-    
-    .tg-badge{
-      background:rgba(29,185,84,0.25);
-      border:1px solid rgba(29,185,84,0.5);
-      border-radius:20px;
-      padding:5px 12px;
-      font-size:11px;
-      color:#5edd7a;
-      display:flex;
-      align-items:center;
-      gap:5px;
-      cursor:pointer;
-      backdrop-filter:blur(4px);
-    }
-    
-    .tg-dot{
-      width:6px;
-      height:6px;
-      border-radius:50%;
-      background:#5edd7a;
-      animation:pulse 2s infinite;
-    }
-    
+    .logo-sub{ font-size:10px; color:rgba(255,255,255,0.6); letter-spacing:1.5px; margin-top:1px; }
+    .header-btns{ display:flex; align-items:center; gap:8px; }
+    .theme-btn{ width:34px; height:34px; border-radius:50%; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.35); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px; transition:all 0.2s; backdrop-filter:blur(4px); }
+    .tg-badge{ background:rgba(29,185,84,0.25); border:1px solid rgba(29,185,84,0.5); border-radius:20px; padding:5px 12px; font-size:11px; color:#5edd7a; display:flex; align-items:center; gap:5px; cursor:pointer; backdrop-filter:blur(4px); }
+    .tg-dot{ width:6px; height:6px; border-radius:50%; background:#5edd7a; animation:pulse 2s infinite; }
     @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
-    
-    .billetes-layer{
-      position:absolute;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
-      pointer-events:none;
-      overflow:hidden;
-    }
-    
-    @keyframes llover{
-      0%{transform:translateY(-25px) rotate(var(--rot));opacity:0;}
-      12%{opacity:1;}
-      80%{opacity:0.85;}
-      100%{transform:translateY(130px) rotate(var(--rot2));opacity:0;}
-    }
-
-    .tabs{
-      display:flex;
-      background:var(--sup);
-      border-bottom:1px solid var(--borde);
-      overflow-x:auto;
-      scrollbar-width:none;
-    }
-    
-    .tabs::-webkit-scrollbar{display:none;}
-    
-    .tab{
-      padding:12px 16px;
-      font-size:12px;
-      font-weight:500;
-      color:var(--txt2);
-      cursor:pointer;
-      border-bottom:2px solid transparent;
-      white-space:nowrap;
-      transition:all 0.2s;
-    }
-    
-    .tab.active{
-      color:var(--verde);
-      border-bottom-color:var(--verde);
-    }
-    
-    .content{
-      padding:16px;
-      max-width:680px;
-      margin:0 auto;
-      padding-bottom:20px;
-    }
-    
-    .page{display:none;}
-    .page.active{display:block;}
-    
-    .resumen-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:10px;
-      margin-bottom:20px;
-    }
-    
-    .stat-card{
-      background:var(--sup);
-      border:1px solid var(--borde);
-      border-radius:12px;
-      padding:14px;
-      text-align:center;
-      cursor:pointer;
-      transition:all 0.2s;
-    }
-    
-    .stat-card:hover{transform:translateY(-2px);}
-    .stat-card.pend:hover{border-color:var(--amarillo);box-shadow:0 4px 16px rgba(239,159,39,0.15);}
-    .stat-card.venc:hover{border-color:var(--rojo);box-shadow:0 4px 16px rgba(226,75,74,0.15);}
-    .stat-card.pag:hover{border-color:var(--verde);box-shadow:0 4px 16px rgba(29,185,84,0.15);}
-    
-    .stat-num{
-      font-family:'Bebas Neue',cursive;
-      font-size:34px;
-      letter-spacing:1px;
-      line-height:1;
-      margin-bottom:3px;
-    }
-    
-    .stat-lbl{
-      font-size:10px;
-      color:var(--txt2);
-      text-transform:uppercase;
-      letter-spacing:0.5px;
-    }
-    
-    .c-verde{color:var(--verde);}
-    .c-rojo{color:var(--rojo);}
-    .c-amarillo{color:var(--amarillo);}
-    
-    .sec-titulo{
-      font-size:11px;
-      text-transform:uppercase;
-      letter-spacing:1.5px;
-      color:var(--txt2);
-      margin-bottom:10px;
-      font-weight:500;
-    }
-    
-    .alerta-banner{
-      border-radius:10px;
-      padding:11px 14px;
-      margin-bottom:10px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-    
-    .alerta-roja{
-      background:rgba(220,38,38,0.1);
-      border:1px solid rgba(220,38,38,0.25);
-    }
-    
-    .alerta-amarilla{
-      background:rgba(217,119,6,0.1);
-      border:1px solid rgba(217,119,6,0.25);
-    }
-    
-    .alerta-icon{font-size:18px;flex-shrink:0;}
-    .alerta-txt{font-size:13px;}
-    
-    .factura-card{
-      background:var(--card-bg);
-      border:1px solid var(--borde);
-      border-radius:12px;
-      padding:14px;
-      margin-bottom:8px;
-      display:flex;
-      align-items:center;
-      gap:12px;
-      position:relative;
-      overflow:hidden;
-    }
-    
-    .factura-card::before{
-      content:'';
-      position:absolute;
-      left:0;
-      top:0;
-      bottom:0;
-      width:3px;
-    }
-    
+    .billetes-layer{ position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:hidden; }
+    @keyframes llover{ 0%{transform:translateY(-25px) rotate(var(--rot));opacity:0;} 12%{opacity:1;} 80%{opacity:0.85;} 100%{transform:translateY(130px) rotate(var(--rot2));opacity:0;} }
+    .tabs{ display:flex; background:var(--sup); border-bottom:1px solid var(--borde); overflow-x:auto; scrollbar-width:none; }
+    .tab{ padding:12px 16px; font-size:12px; font-weight:500; color:var(--txt2); cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; transition:all 0.2s; }
+    .tab.active{ color:var(--verde); border-bottom-color:var(--verde); }
+    .content{ padding:16px; max-width:680px; margin:0 auto; padding-bottom:20px; }
+    .page{display:none;} .page.active{display:block;}
+    .resumen-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px; }
+    .stat-card{ background:var(--sup); border:1px solid var(--borde); border-radius:12px; padding:14px; text-align:center; cursor:pointer; }
+    .stat-num{ font-family:'Bebas Neue',cursive; font-size:34px; letter-spacing:1px; line-height:1; }
+    .stat-lbl{ font-size:10px; color:var(--txt2); text-transform:uppercase; }
+    .c-verde{color:var(--verde);} .c-rojo{color:var(--rojo);} .c-amarillo{color:var(--amarillo);}
+    .sec-titulo{ font-size:11px; text-transform:uppercase; letter-spacing:1.5px; color:var(--txt2); margin-bottom:10px; font-weight:500; }
+    .factura-card{ background:var(--card-bg); border:1px solid var(--borde); border-radius:12px; padding:14px; margin-bottom:8px; display:flex; align-items:center; gap:12px; position:relative; overflow:hidden; }
+    .factura-card::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:3px; }
     .factura-card.pendiente::before{background:var(--amarillo);}
     .factura-card.vencida::before{background:var(--rojo);}
     .factura-card.pagada::before{background:var(--verde);}
-    
-    .emp-ico{
-      width:40px;
-      height:40px;
-      border-radius:10px;
-      background:var(--sup2);
-      border:1px solid var(--borde);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:18px;
-      flex-shrink:0;
-    }
-    
-    .f-info{flex:1;min-width:0;}
-    .f-empresa{font-size:14px;font-weight:600;margin-bottom:1px;}
-    .f-titular{font-size:12px;color:var(--txt2);}
-    
-    .f-right{text-align:right;flex-shrink:0;}
-    .f-monto{
-      font-family:'Bebas Neue',cursive;
-      font-size:20px;
-      letter-spacing:0.5px;
-    }
-    .f-vence{font-size:11px;color:var(--txt2);margin-bottom:5px;}
-    
-    .badge{
-      display:inline-block;
-      padding:3px 8px;
-      border-radius:20px;
-      font-size:11px;
-      font-weight:500;
-    }
-    
-    .badge-pendiente{background:rgba(217,119,6,0.15);color:var(--amarillo);}
-    .badge-vencida{background:rgba(220,38,38,0.15);color:var(--rojo);}
-    .badge-pagada{background:rgba(22,163,74,0.15);color:var(--verde);}
-    
-    .acciones{
-      display:flex;
-      gap:5px;
-      margin-top:8px;
-    }
-    
-    .btn{
-      padding:5px 10px;
-      border-radius:7px;
-      font-size:11px;
-      font-weight:500;
-      cursor:pointer;
-      border:1px solid var(--borde);
-      background:var(--sup2);
-      color:var(--txt);
-      transition:all 0.15s;
-    }
-    
-    .btn.pagar{
-      background:rgba(22,163,74,0.12);
-      border-color:rgba(22,163,74,0.3);
-      color:var(--verde);
-    }
-    
-    .btn.no-pago{
-      background:rgba(220,38,38,0.1);
-      border-color:rgba(220,38,38,0.3);
-      color:var(--rojo);
-    }
-    
-    .form-group{margin-bottom:14px;}
-    
-    .form-label{
-      font-size:11px;
-      color:var(--txt2);
-      margin-bottom:5px;
-      display:block;
-      font-weight:500;
-      text-transform:uppercase;
-      letter-spacing:0.5px;
-    }
-    
-    .form-input,.form-select{
-      width:100%;
-      background:var(--sup);
-      border:1px solid var(--borde);
-      border-radius:8px;
-      padding:9px 12px;
-      color:var(--txt);
-      font-size:14px;
-      font-family:'Inter',sans-serif;
-      outline:none;
-    }
-    
-    .upload-area{
-      border:1.5px dashed rgba(29,185,84,0.3);
-      border-radius:12px;
-      padding:28px;
-      text-align:center;
-      cursor:pointer;
-      background:rgba(29,185,84,0.03);
-      transition:all 0.2s;
-      margin-bottom:14px;
-    }
-    
-    .upload-area:hover{border-color:rgba(29,185,84,0.6);}
+    .emp-ico{ width:40px; height:40px; border-radius:10px; background:var(--sup2); border:1px solid var(--borde); display:flex; align-items:center; justify-content:center; font-size:18px; }
+    .f-info{flex:1;min-width:0;} .f-empresa{font-size:14px;font-weight:600;} .f-titular{font-size:12px;color:var(--txt2);}
+    .f-right{text-align:right;} .f-monto{ font-family:'Bebas Neue',cursive; font-size:20px; } .f-vence{font-size:11px;color:var(--txt2);}
+    .form-group{margin-bottom:14px;} .form-label{ font-size:11px; color:var(--txt2); margin-bottom:5px; display:block; text-transform:uppercase; }
+    .form-input{ width:100%; background:var(--sup); border:1px solid var(--borde); border-radius:8px; padding:9px 12px; color:var(--txt); font-size:14px; }
+    .upload-area{ border:1.5px dashed rgba(29,185,84,0.3); border-radius:12px; padding:28px; text-align:center; cursor:pointer; background:rgba(29,185,84,0.03); margin-bottom:14px; }
     .upload-icon{font-size:28px;margin-bottom:8px;}
-    .upload-txt{font-size:13px;color:var(--txt2);}
-    .upload-txt strong{color:var(--verde);}
-    
-    .btn-principal{
-      width:100%;
-      padding:13px;
-      background:var(--verde);
-      color:#000;
-      border:none;
-      border-radius:10px;
-      font-family:'Bebas Neue',cursive;
-      letter-spacing:2px;
-      font-size:17px;
-      cursor:pointer;
-      transition:all 0.2s;
-    }
-    
-    .btn-principal:hover{background:var(--vd);transform:translateY(-1px);}
-    
-    .divider{
-      border:none;
-      border-top:1px solid var(--borde);
-      margin:16px 0;
-    }
-    
-    .ia-loader{
-      display:none;
-      background:rgba(29,185,84,0.08);
-      border:1px solid rgba(29,185,84,0.2);
-      border-radius:10px;
-      padding:14px;
-      margin-bottom:14px;
-      text-align:center;
-      font-size:13px;
-      color:var(--verde);
-    }
-    
+    .btn-principal{ width:100%; padding:13px; background:var(--verde); color:#000; border:none; border-radius:10px; font-family:'Bebas Neue',cursive; letter-spacing:2px; font-size:17px; cursor:pointer; }
+    .ia-loader{ display:none; background:rgba(29,185,84,0.08); border:1px solid rgba(29,185,84,0.2); border-radius:10px; padding:14px; margin-bottom:14px; text-align:center; color:var(--verde); }
     .ia-loader.show{display:block;}
-    
-    .spinner{
-      display:inline-block;
-      width:14px;
-      height:14px;
-      border:2px solid rgba(29,185,84,0.3);
-      border-top-color:var(--verde);
-      border-radius:50%;
-      animation:spin 0.8s linear infinite;
-      margin-right:7px;
-      vertical-align:middle;
-    }
-    
+    .spinner{ display:inline-block; width:14px; height:14px; border:2px solid rgba(29,185,84,0.3); border-top-color:var(--verde); border-radius:50%; animation:spin 0.8s linear infinite; margin-right:7px; vertical-align:middle; }
     @keyframes spin{to{transform:rotate(360deg);}}
-    
-    .campos-ia{
-      background:rgba(29,185,84,0.05);
-      border:1px solid rgba(29,185,84,0.15);
-      border-radius:10px;
-      padding:12px;
-      margin-bottom:14px;
-      display:none;
-    }
-    
-    .campos-ia.show{display:block;}
-    
-    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-    .file-input{display:none;}
-    
-    .flash{
-      position:fixed;
-      top:12px;
-      left:50%;
-      transform:translateX(-50%);
-      background:var(--verde);
-      color:#000;
-      padding:9px 22px;
-      border-radius:30px;
-      font-family:'Bebas Neue',cursive;
-      letter-spacing:1.5px;
-      font-size:14px;
-      z-index:999;
-      opacity:0;
-      transition:opacity 0.3s;
-      pointer-events:none;
-    }
-    
+    .flash{ position:fixed; top:12px; left:50%; transform:translateX(-50%); background:var(--verde); color:#000; padding:9px 22px; border-radius:30px; font-family:'Bebas Neue'; z-index:999; opacity:0; transition:opacity 0.3s; pointer-events:none; }
     .flash.show{opacity:1;}
-    
-    /* MODAL */
-    .modal-overlay{
-      display:none;
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,0.7);
-      z-index:200;
-      align-items:flex-end;
-      justify-content:center;
-    }
-    
+    .modal-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:200; align-items:flex-end; justify-content:center; }
     .modal-overlay.show{display:flex;}
-    
-    .modal-sheet{
-      background:var(--sup);
-      border-radius:20px 20px 0 0;
-      width:100%;
-      max-width:680px;
-      max-height:85vh;
-      overflow-y:auto;
-      padding:20px;
-    }
-
-    .modal-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:20px;
-    }
-
-    .modal-titulo{
-      font-family:'Bebas Neue';
-      font-size:24px;
-      letter-spacing:1px;
-    }
-
-    .modal-close{
-      cursor:pointer;
-      font-size:20px;
-      color:var(--txt2);
-    }
+    .modal-sheet{ background:var(--sup); border-radius:20px 20px 0 0; width:100%; max-width:680px; max-height:85vh; overflow-y:auto; padding:20px; }
+    .modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
   </style>
 </head>
-
 <body>
   <div class="app" id="app" data-theme="dark">
     <div class="flash" id="flash"></div>
-
     <div class="modal-overlay" id="modalOverlay" onclick="cerrarModal(event)">
-      <div class="modal-sheet" id="modalSheet">
+      <div class="modal-sheet">
         <div class="modal-header">
-          <div class="modal-titulo" id="modalTitulo"></div>
-          <div class="modal-close" onclick="cerrarModal()">✕</div>
+          <div style="font-family:'Bebas Neue'; font-size:24px;" id="modalTitulo"></div>
+          <div style="cursor:pointer;" onclick="cerrarModal()">✕</div>
         </div>
-        <div class="modal-body" id="modalBody"></div>
+        <div id="modalBody"></div>
       </div>
     </div>
-
     <div class="header">
       <div class="header-logo-wrap">
         <div class="billetes-layer" id="billetesLayer"></div>
         <div class="header-content">
-          <div class="logo-block">
+          <div>
             <div class="logo">PAGA <span>DIOS</span></div>
             <div class="logo-sub">Gestor inteligente de facturas</div>
           </div>
           <div class="header-btns">
-            <div class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</div>
+            <div class="theme-btn" onclick="toggleTheme()">🌙</div>
             <div class="tg-badge" onclick="irA('config')"><div class="tg-dot"></div>Telegram</div>
           </div>
         </div>
       </div>
     </div>
-
     <div class="tabs">
       <div class="tab active" onclick="cambiarTab('inicio',this)">Resumen</div>
       <div class="tab" onclick="cambiarTab('facturas',this)">Facturas</div>
@@ -561,296 +102,142 @@
       <div class="tab" onclick="cambiarTab('historial',this)">Gastos</div>
       <div class="tab" onclick="cambiarTab('config',this)">Config</div>
     </div>
-
     <div id="tab-inicio" class="page active">
       <div class="content">
         <div class="resumen-grid">
-          <div class="stat-card pend" onclick="abrirModal('pendiente')">
-            <div class="stat-num c-amarillo" id="cnt-pend">0</div>
-            <div class="stat-lbl">Pendientes</div>
-          </div>
-          <div class="stat-card venc" onclick="abrirModal('vencida')">
-            <div class="stat-num c-rojo" id="cnt-venc">0</div>
-            <div class="stat-lbl">Vencidas</div>
-          </div>
-          <div class="stat-card pag" onclick="abrirModal('pagada')">
-            <div class="stat-num c-verde" id="cnt-pag">0</div>
-            <div class="stat-lbl">Pagadas</div>
-          </div>
+          <div class="stat-card" onclick="abrirModal('pendiente')"><div class="stat-num c-amarillo" id="cnt-pend">0</div><div class="stat-lbl">Pendientes</div></div>
+          <div class="stat-card" onclick="abrirModal('vencida')"><div class="stat-num c-rojo" id="cnt-venc">0</div><div class="stat-lbl">Vencidas</div></div>
+          <div class="stat-card" onclick="abrirModal('pagada')"><div class="stat-num c-verde" id="cnt-pag">0</div><div class="stat-lbl">Pagadas</div></div>
         </div>
-        <div class="sec-titulo">Urgentes</div>
-        <div id="alertas-urgentes"></div>
-        <div class="divider"></div>
         <div id="lista-inicio"></div>
       </div>
     </div>
-
     <div id="tab-facturas" class="page">
-      <div class="content">
-        <div class="sec-titulo">Todas las facturas</div>
-        <div id="lista-facturas"></div>
-      </div>
+      <div class="content"><div class="sec-titulo">Todas las facturas</div><div id="lista-facturas"></div></div>
     </div>
-
     <div id="tab-agregar" class="page">
       <div class="content">
         <div class="sec-titulo">Nueva factura</div>
-<div class="upload-area" onclick="document.getElementById('fileInput').click()">
-  <input type="file" class="file-input" id="fileInput" accept="image/*,application/pdf" onchange="procesarArchivo(this)">
-  <div class="upload-icon">📎</div>
-  <div class="upload-txt">
-    <strong>Subir factura</strong><br>
-    <span style="font-size: 11px; color: var(--txt2)">(Fotos, Capturas o PDF)</span>
-  </div>
-</div>
-        
-        <div class="ia-loader" id="iaLoader">
-          <span class="spinner"></span>
-          <span>Gemini analizando factura...</span>
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+          <input type="file" class="file-input" id="fileInput" accept="image/*,application/pdf" onchange="procesarArchivo(this)">
+          <div class="upload-icon">📎</div>
+          <div><strong>Subir factura</strong><br><span style="font-size:11px; color:var(--txt2)">(Fotos, Capturas o PDF)</span></div>
         </div>
-
-        <div class="campos-ia" id="camposIa">
-          <div id="ocrResultados"></div>
+        <div class="ia-loader" id="iaLoader"><span class="spinner"></span><span>Gemini analizando...</span></div>
+        <div class="form-group"><label class="form-label">Empresa</label><input type="text" class="form-input" id="f-empresa"></div>
+        <div class="form-group"><label class="form-label">Titular</label><input type="text" class="form-input" id="f-titular"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label class="form-label">Monto</label><input type="number" class="form-input" id="f-monto"></div>
+          <div class="form-group"><label class="form-label">Vencimiento</label><input type="date" class="form-input" id="f-vence"></div>
         </div>
-
-        <div class="row2">
-          <div class="form-group">
-            <label class="form-label">Empresa</label>
-            <input type="text" class="form-input" id="f-empresa">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Titular</label>
-            <input type="text" class="form-input" id="f-titular">
-          </div>
-        </div>
-        <div class="row2">
-          <div class="form-group">
-            <label class="form-label">Monto</label>
-            <input type="number" class="form-input" id="f-monto">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Vencimiento</label>
-            <input type="date" class="form-input" id="f-vence">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Categoría</label>
-          <input type="text" class="form-input" id="f-cat" placeholder="Emoji">
-        </div>
+        <div class="form-group"><label class="form-label">Categoría (Emoji)</label><input type="text" class="form-input" id="f-cat"></div>
         <button class="btn-principal" onclick="guardarFactura()">GUARDAR FACTURA</button>
       </div>
     </div>
-
-    <div id="tab-historial" class="page">
-      <div class="content">
-        <div class="sec-titulo">Historial de Pagos</div>
-        <div id="historial-lista"></div>
-      </div>
-    </div>
-
-    <div id="tab-config" class="page">
-      <div class="content">
-        <div class="sec-titulo">Configuración</div>
-        <p style="font-size:12px; color:var(--txt2)">Configura aquí tus tokens de Telegram en el futuro.</p>
-      </div>
-    </div>
+    <div id="tab-historial" class="page"><div class="content"><div class="sec-titulo">Historial de Pagos</div><div id="historial-lista"></div></div></div>
+    <div id="tab-config" class="page"><div class="content"><div class="sec-titulo">Configuración</div></div></div>
   </div>
-
   <script>
-    // VARIABLES GLOBALES
     let darkMode = true;
     const facturas = JSON.parse(localStorage.getItem('pagaDios_facturas')) || [];
-
     function fmt(n){return '$'+Math.round(n).toLocaleString('es-AR');}
-
-    // NAVEGACIÓN
     function cambiarTab(id, el){
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.getElementById('tab-'+id).classList.add('active');
       if(el) el.classList.add('active');
     }
-
     function irA(tab){
       const tabs = ['inicio','facturas','agregar','historial','config'];
-      const index = tabs.indexOf(tab);
-      cambiarTab(tab, document.querySelectorAll('.tab')[index]);
+      cambiarTab(tab, document.querySelectorAll('.tab')[tabs.indexOf(tab)]);
     }
 
-    // IA GEMINI - PROCESAR ARCHIVO
- async function procesarArchivo(input) {
-  if (!input.files[0]) return;
-  
-  const file = input.files[0];
-  const mimeType = file.type; // Capturamos si es image/png, image/jpeg o application/pdf
-
-  // Validar tipos permitidos
-  const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
-  if (!tiposPermitidos.includes(mimeType)) {
-    flash("❌ Formato no soportado (usa JPG, PNG o PDF)");
-    return;
-  }
-
-  const loader = document.getElementById('iaLoader');
-  if(loader) loader.classList.add('show');
-
-  const reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = async () => {
-    const base64Data = reader.result.split(',')[1];
-
-    try {
-      const response = await fetch('/api/analizar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          imageB64: base64Data,
-          mimeType: mimeType // Enviamos el tipo de archivo
-        })
-      });
-
-      if (!response.ok) throw new Error('Error en servidor');
-
-      const datosIA = await response.json();
-      
-      document.getElementById('f-empresa').value = datosIA.empresa || '';
-      document.getElementById('f-titular').value = datosIA.titular || '';
-      document.getElementById('f-monto').value = datosIA.monto || '';
-      document.getElementById('f-vence').value = datosIA.vence || '';
-      document.getElementById('f-cat').value = datosIA.categoria || '📄';
-      
-      flash("✅ DOCUMENTO PROCESADO");
-    } catch (err) {
-      console.error(err);
-      flash("❌ ERROR AL ANALIZAR");
-    } finally {
-      if(loader) loader.classList.remove('show');
+    async function procesarArchivo(input) {
+      if (!input.files[0]) return;
+      const file = input.files[0];
+      const mimeType = file.type;
+      const loader = document.getElementById('iaLoader');
+      if(loader) loader.classList.add('show');
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        const base64Data = reader.result.split(',')[1];
+        try {
+          const response = await fetch('/api/analizar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageB64: base64Data, mimeType: mimeType })
+          });
+          if (!response.ok) throw new Error('Error en servidor');
+          const d = await response.json();
+          document.getElementById('f-empresa').value = d.empresa || '';
+          document.getElementById('f-titular').value = d.titular || '';
+          document.getElementById('f-monto').value = d.monto || '';
+          document.getElementById('f-vence').value = d.vence || '';
+          document.getElementById('f-cat').value = d.categoria || '📄';
+          flash("✅ DATOS EXTRAÍDOS");
+        } catch (err) {
+          console.error(err);
+          flash("❌ ERROR AL ANALIZAR");
+        } finally {
+          if(loader) loader.classList.remove('show');
+        }
+      };
     }
-  };
-}
+
     function guardarFactura(){
-      const empresa = document.getElementById('f-empresa').value;
-      const titular = document.getElementById('f-titular').value;
-      const monto = parseFloat(document.getElementById('f-monto').value);
-      const vence = document.getElementById('f-vence').value;
-      const icono = document.getElementById('f-cat').value || '📄';
-      
-      if(!empresa || !monto || !vence){
-        flash('❌ COMPLETÁ LOS CAMPOS');
-        return;
-      }
-      
-      facturas.unshift({
+      const f = {
         id: Date.now(),
-        empresa, titular, monto, vence,
-        estado: 'pendiente',
-        icono
-      });
-      
+        empresa: document.getElementById('f-empresa').value,
+        titular: document.getElementById('f-titular').value,
+        monto: parseFloat(document.getElementById('f-monto').value),
+        vence: document.getElementById('f-vence').value,
+        icono: document.getElementById('f-cat').value || '📄',
+        estado: 'pendiente'
+      };
+      if(!f.empresa || !f.monto) return flash('❌ DATOS INCOMPLETOS');
+      facturas.unshift(f);
       localStorage.setItem('pagaDios_facturas', JSON.stringify(facturas));
-      renderTodo();
-      irA('facturas');
-      flash('✅ GUARDADA');
+      renderTodo(); irA('facturas'); flash('✅ GUARDADA');
     }
 
-    function marcar(id, estado){
+    function marcar(id, est){
       const f = facturas.find(x => x.id === id);
-      if(f){
-        f.estado = estado;
-        localStorage.setItem('pagaDios_facturas', JSON.stringify(facturas));
-        renderTodo();
-        flash(estado.toUpperCase());
-      }
+      if(f){ f.estado = est; localStorage.setItem('pagaDios_facturas', JSON.stringify(facturas)); renderTodo(); }
     }
 
     function crearCard(f){
-      const acc = f.estado !== 'pagada' 
-        ? `<div class="acciones"><button class="btn pagar" onclick="marcar(${f.id},'pagada')">✅ Pagué</button></div>`
-        : '';
-      
-      return `
-        <div class="factura-card ${f.estado}">
-          <div class="emp-ico">${f.icono}</div>
-          <div class="f-info">
-            <div class="f-empresa">${f.empresa}</div>
-            <div class="f-titular">${f.titular || ''}</div>
-            ${acc}
-          </div>
-          <div class="f-right">
-            <div class="f-monto">${fmt(f.monto)}</div>
-            <div class="f-vence">${venceFmt(f.vence)}</div>
-          </div>
-        </div>
-      `;
-    }
-
-    function venceFmt(v){
-        const d = new Date(v + 'T12:00:00');
-        return d.toLocaleDateString('es-AR');
+      return `<div class="factura-card ${f.estado}"><div class="emp-ico">${f.icono}</div><div class="f-info"><div class="f-empresa">${f.empresa}</div><div class="f-titular">${f.titular}</div>${f.estado!=='pagada'?'<button class="btn" style="margin-top:5px; padding:3px 8px; font-size:10px; cursor:pointer;" onclick="marcar('+f.id+',\'pagada\')">✅ PAGAR</button>':''}</div><div class="f-right"><div class="f-monto">${fmt(f.monto)}</div><div class="f-vence">${f.vence}</div></div></div>`;
     }
 
     function renderTodo(){
       const pend = facturas.filter(f => f.estado === 'pendiente');
-      const venc = facturas.filter(f => f.estado === 'vencida');
-      const pag = facturas.filter(f => f.estado === 'pagada');
-      
       document.getElementById('cnt-pend').textContent = pend.length;
-      document.getElementById('cnt-venc').textContent = venc.length;
-      document.getElementById('cnt-pag').textContent = pag.length;
-      
+      document.getElementById('cnt-venc').textContent = facturas.filter(f => f.estado === 'vencida').length;
+      document.getElementById('cnt-pag').textContent = facturas.filter(f => f.estado === 'pagada').length;
       document.getElementById('lista-facturas').innerHTML = facturas.map(f => crearCard(f)).join('');
       document.getElementById('lista-inicio').innerHTML = pend.slice(0,3).map(f => crearCard(f)).join('');
-      document.getElementById('historial-lista').innerHTML = pag.map(f => crearCard(f)).join('');
+      document.getElementById('historial-lista').innerHTML = facturas.filter(f => f.estado==='pagada').map(f => crearCard(f)).join('');
     }
 
-    function flash(msg){
-      const el = document.getElementById('flash');
-      el.textContent = msg;
-      el.classList.add('show');
-      setTimeout(() => el.classList.remove('show'), 2000);
-    }
-
-    function toggleTheme(){
-      darkMode = !darkMode;
-      document.getElementById('app').setAttribute('data-theme', darkMode ? 'dark' : 'light');
-      document.getElementById('themeBtn').textContent = darkMode ? '🌙' : '☀️';
-    }
-
-    function abrirModal(tipo){
-      const lista = facturas.filter(f => f.estado === (tipo === 'pendiente' ? 'pendiente' : tipo === 'vencida' ? 'vencida' : 'pagada'));
-      document.getElementById('modalTitulo').textContent = tipo.toUpperCase();
-      document.getElementById('modalBody').innerHTML = lista.map(f => crearCard(f)).join('') || 'Vacío';
+    function flash(m){ const e = document.getElementById('flash'); e.textContent = m; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),2000); }
+    function toggleTheme(){ darkMode = !darkMode; document.getElementById('app').setAttribute('data-theme', darkMode?'dark':'light'); }
+    function abrirModal(t){ 
+      const l = facturas.filter(f => f.estado === t);
+      document.getElementById('modalTitulo').textContent = t.toUpperCase();
+      document.getElementById('modalBody').innerHTML = l.map(f => crearCard(f)).join('') || 'Vacío';
       document.getElementById('modalOverlay').classList.add('show');
     }
-
-    function cerrarModal(e){
-      if(!e || e.target === document.getElementById('modalOverlay') || e.target.classList.contains('modal-close')){
-        document.getElementById('modalOverlay').classList.remove('show');
-      }
-    }
-
-    // ANIMACIÓN BILLETES
+    function cerrarModal(e){ if(!e || e.target.classList.contains('modal-overlay') || e.target.textContent === '✕') document.getElementById('modalOverlay').classList.remove('show'); }
     function crearBilletes(){
-      const layer = document.getElementById('billetesLayer');
-      for(let i=0; i<10; i++){
-        const b = document.createElement('div');
-        b.style.position = 'absolute';
-        b.style.left = Math.random()*100 + '%';
-        b.style.top = '-20px';
-        b.style.color = 'rgba(255,255,255,0.1)';
-        b.style.setProperty('--rot', (Math.random()*20-10)+'deg');
-        b.style.setProperty('--rot2', (Math.random()*40-20)+'deg');
-        b.style.animation = `llover ${2+Math.random()*2}s linear infinite`;
-        b.style.animationDelay = Math.random()*2 + 's';
-        b.textContent = '$';
-        layer.appendChild(b);
+      const l = document.getElementById('billetesLayer');
+      for(let i=0; i<8; i++){
+        const b = document.createElement('div'); b.style.position = 'absolute'; b.style.left = Math.random()*100 + '%'; b.style.top = '-20px'; b.style.color = 'rgba(255,255,255,0.1)';
+        b.style.setProperty('--rot', (Math.random()*20-10)+'deg'); b.style.setProperty('--rot2', (Math.random()*40-20)+'deg');
+        b.style.animation = `llover ${2+Math.random()*2}s linear infinite`; b.textContent = '$'; l.appendChild(b);
       }
     }
-
-    window.onload = () => {
-      renderTodo();
-      crearBilletes();
-    };
+    window.onload = () => { renderTodo(); crearBilletes(); };
   </script>
 </body>
 </html>
