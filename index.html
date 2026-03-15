@@ -595,11 +595,14 @@
     <div id="tab-agregar" class="page">
       <div class="content">
         <div class="sec-titulo">Nueva factura</div>
-        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-          <input type="file" class="file-input" id="fileInput" accept="image/*" onchange="procesarArchivo(this)">
-          <div class="upload-icon">📎</div>
-          <div class="upload-txt"><strong>Subir foto de factura</strong></div>
-        </div>
+<div class="upload-area" onclick="document.getElementById('fileInput').click()">
+  <input type="file" class="file-input" id="fileInput" accept="image/*,application/pdf" onchange="procesarArchivo(this)">
+  <div class="upload-icon">📎</div>
+  <div class="upload-txt">
+    <strong>Subir factura</strong><br>
+    <span style="font-size: 11px; color: var(--txt2)">(Fotos, Capturas o PDF)</span>
+  </div>
+</div>
         
         <div class="ia-loader" id="iaLoader">
           <span class="spinner"></span>
@@ -675,51 +678,56 @@
     }
 
     // IA GEMINI - PROCESAR ARCHIVO
-    async function procesarArchivo(input) {
-      if (!input.files[0]) return;
-      const file = input.files[0];
+ async function procesarArchivo(input) {
+  if (!input.files[0]) return;
+  
+  const file = input.files[0];
+  const mimeType = file.type; // Capturamos si es image/png, image/jpeg o application/pdf
+
+  // Validar tipos permitidos
+  const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+  if (!tiposPermitidos.includes(mimeType)) {
+    flash("❌ Formato no soportado (usa JPG, PNG o PDF)");
+    return;
+  }
+
+  const loader = document.getElementById('iaLoader');
+  if(loader) loader.classList.add('show');
+
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = async () => {
+    const base64Data = reader.result.split(',')[1];
+
+    try {
+      const response = await fetch('/api/analizar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          imageB64: base64Data,
+          mimeType: mimeType // Enviamos el tipo de archivo
+        })
+      });
+
+      if (!response.ok) throw new Error('Error en servidor');
+
+      const datosIA = await response.json();
       
-      const loader = document.getElementById('iaLoader');
-      const camposIa = document.getElementById('camposIa');
-      if(loader) loader.classList.add('show');
-
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = async () => {
-        const base64Data = reader.result.split(',')[1];
-
-        try {
-          const response = await fetch('/api/analizar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageB64: base64Data })
-          });
-
-          if (!response.ok) throw new Error('Error en el servidor');
-
-          const datosIA = await response.json();
-          
-          document.getElementById('f-empresa').value = datosIA.empresa || '';
-          document.getElementById('f-titular').value = datosIA.titular || '';
-          document.getElementById('f-monto').value = datosIA.monto || '';
-          document.getElementById('f-vence').value = datosIA.vence || '';
-          document.getElementById('f-cat').value = datosIA.categoria || '📄';
-          
-          if(camposIa) {
-            camposIa.classList.add('show');
-            document.getElementById('ocrResultados').innerHTML = `<p style="font-size:12px; color:var(--verde)">✨ Datos extraídos con éxito</p>`;
-          }
-          
-          flash("✅ IA DE GEMINI FINALIZADA");
-        } catch (err) {
-          console.error(err);
-          flash("❌ ERROR AL ANALIZAR");
-        } finally {
-          if(loader) loader.classList.remove('show');
-        }
-      };
+      document.getElementById('f-empresa').value = datosIA.empresa || '';
+      document.getElementById('f-titular').value = datosIA.titular || '';
+      document.getElementById('f-monto').value = datosIA.monto || '';
+      document.getElementById('f-vence').value = datosIA.vence || '';
+      document.getElementById('f-cat').value = datosIA.categoria || '📄';
+      
+      flash("✅ DOCUMENTO PROCESADO");
+    } catch (err) {
+      console.error(err);
+      flash("❌ ERROR AL ANALIZAR");
+    } finally {
+      if(loader) loader.classList.remove('show');
     }
-
+  };
+}
     function guardarFactura(){
       const empresa = document.getElementById('f-empresa').value;
       const titular = document.getElementById('f-titular').value;
