@@ -1,11 +1,4 @@
 {
-  "name": "paga-dios",
-  "version": "1.0.0",
-  "dependencies": {
-    "@google/generative-ai": "^0.1.0"
-  }
-}
-{
   "name": "pagadiosito",
   "version": "1.0.0",
   "type": "module",
