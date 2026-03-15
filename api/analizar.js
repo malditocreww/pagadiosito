@@ -1,10 +1,16 @@
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Post only' });
+  // 1. Solo aceptamos POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método no permitido' });
+  }
 
   const { imageB64 } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
 
-  if (!apiKey) return res.status(500).json({ error: "Falta API KEY en Vercel" });
+  // 2. Verificamos la clave
+  if (!apiKey) {
+    return res.status(500).json({ error: "Falta GEMINI_API_KEY en Vercel" });
+  }
 
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
@@ -13,7 +19,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{
           parts: [
-            { text: "Analiza la factura. Devuelve SOLO un JSON con: empresa, titular, monto (entero), vence (YYYY-MM-DD), categoria (emoji)." },
+            { text: "Analiza esta factura. Devuelve SOLO un objeto JSON con: empresa, titular, monto (numero), vence (YYYY-MM-DD), categoria (emoji)." },
             { inline_data: { mime_type: "image/jpeg", data: imageB64 } }
           ]
         }]
@@ -22,14 +28,17 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // Si Google nos da error, lo vemos acá
-    if (data.error) return res.status(500).json({ error: "Error de Google", details: data.error });
+    // 3. Si Google devuelve error (ej: clave inválida)
+    if (data.error) {
+      return res.status(500).json({ error: "Google API Error", details: data.error.message });
+    }
 
-    const rawText = data.candidates[0].content.parts[0].text;
-    const cleanJson = rawText.replace(/```json|```/g, "").trim();
+    // 4. Procesamos la respuesta
+    const textoRespuesta = data.candidates[0].content.parts[0].text;
+    const jsonLimpio = textoRespuesta.replace(/```json|```/g, "").trim();
     
-    return res.status(200).json(JSON.parse(cleanJson));
-  } catch (err) {
-    return res.status(500).json({ error: "Error interno", msg: err.message });
+    return res.status(200).json(JSON.parse(jsonLimpio));
+  } catch (error) {
+    return res.status(500).json({ error: "Error interno del servidor", detalle: error.message });
   }
 }
